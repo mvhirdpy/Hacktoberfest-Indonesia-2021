@@ -1,0 +1,209 @@
+<div class="row justify-content-center">
+	<div class="col-lg-8">
+		<div class="card">
+			<div class="card-header bg-blue">
+				<h5 class="card-title mb-0 text-white"><?= ($target->status) == 'Unpaid' ? '<i class="fas fa-fw fa-credit-card"></i> Lakukan Pembayaran' : '<i class="fa fa-search mr-1"></i> Detail Tagihan' ?></h5>
+			</div>
+			<div class="card-body">
+				<?php if (time() > strtotime($target->expired_payment)) { ?>
+					<div class="alert alert-danger"><b>Maaf:</b> Invoice sudah melewati jatuh tempo</b></div>
+					<a href="<?= base_url() ?>order/cart" class="btn btn-blue btn-block mb-2 mt-4">Kembali</a>
+				<?php } else { ?>
+				<div class="">
+					<?php if ($target->status == 'Unpaid' || $target->status == 'Need Verification') { ?>
+                    <h4 class="">Nominal Transfer</h4>
+                    <h1 class="mb-2 text-blue" id="nominal">Rp <?= currency($target->amount) ?></h1>
+                    <h4 class="mb-1">Silahkan transfer sesuai nominal di atas</h4>
+                    <h4 class="font-600 color-highlight mb-0">Batas Transfer</h4><hr>
+                    <center>
+                        <h1 class="mb-2" id="text-count-down" style="color:red"><?= $this->lib->format_datetime($target->expired_payment) ?></h1>
+                    </center><hr>
+
+                    <div class="row mb-0 mt-2">
+		                <div class="col-4">
+		                    <h4 class="text-dark">No Tagihan</h4>
+		                </div>
+		                <div class="col-8">
+		                    <h4 class=""><?= $target->invoice_code ?></h4>
+		                </div>
+
+		                <div class="col-4">
+		                    <h4 class="text-dark">Status</h4>
+		                </div>
+		                <div class="col-8">
+		                    <h4 class=""><?= $target->status ?></h4>
+		                </div>
+
+
+		                <div class="col-4">
+		                    <h4 class="text-dark">Metode Pembayaran</h4>
+		                </div>
+		                <div class="col-8">
+		                    <h4 class=""><?= $method->name ?></h4>
+		                </div>
+
+		                <div class="col-4">
+		                    <h4 class="text-dark">Keterangan</h4>
+		                </div>
+		                <div class="col-8">
+		                    <h4 class=""><?= $method->description ?></h4>
+		                </div>
+		            </div><hr>
+		        	<?php } ?>
+		            <div class="table-responsive">
+						<table class="table table-colored-bordered table-bordered-dark table-hover m-0" id="table-data">
+							<thead>
+								<tr class="bg-blue">
+									<th>LAYANAN</th>
+									<th>TARGET</th>
+									<th>JUMLAH</th>
+									<th>HARGA</th>
+									<th>STATUS</th>
+								</tr>
+							</thead>
+							<tbody>
+		<?php
+		foreach ($order as $key => $value) {
+		?>
+								<tr>
+									<td><?= $value['service'] ?></td>
+									<td><?= $value['target'] ?></td>
+									<td><?= number_format($value['quantity'],0,',','.') ?></td>
+									<td>Rp <?= number_format($value['price'],0,',','.') ?></td>
+									<td><?= $this->lib->status_order($value['status']) ?></td>
+								</tr>
+		<?php
+		}
+		?>
+							</tbody>
+						</table>
+					</div><br />
+					<div class="row justify-content-center">
+						<div class="col-md-8">
+							<span class="btn btn-success btn-block btn-lg mt-3 mb-3" data-toggle="modal" data-target="#standard-modal"> Konfirmasi Pembayaran</span>
+						</div>
+					</div>
+					<div class="text-right">
+						<div class="row">
+							<div class="col-md-3">
+								<button class="btn btn-blue btn-block mb-2" onclick="salin('<?= base_url('order/invoice/'.$target->invoice_code) ?>')"><i class="fa fa-link"></i> Salin url</button>
+							</div>
+							<div class="col-md-3 mb-2">
+								<a href="javascript:;" onclick="confirm_hapus('<?= $target->invoice_code ?>')" class="btn btn-danger mb-2 btn-block <?= ($target->status) == 'Unpaid' ? 'active' : 'disabled' ?>"><i class="fa fa-times mr-1"></i> Batalkan Pesanan</a>
+							</div>
+							<div class="col-md-3 mb-2">
+								<a href="<?= base_url() ?>page/contact" class="btn btn-blue mb-2 btn-block"><i class="fa fa-phone mr-1"></i> Kontak Admin</a>
+							</div>
+							<div class="col-md-3 mb-2">
+								<button class="btn btn-blue btn-block mb-2" onclick="window.print()">
+					              <i class="fa fa-file-pdf"></i> Print PDF
+					            </button>
+							</div>
+						</div>
+					</div>
+                </div>
+            <?php } ?>
+			</div>
+		</div>
+	</div>
+</div>
+<div id="standard-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="standard-modalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content ">
+            <div class="modal-header">
+                <h4 class="modal-title" id="standard-modalLabel"><i class="fas fa-plus"></i> Konfirmasi Pembayaran</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            </div>
+            <div class="modal-body">
+				<?php echo form_open_multipart('order/confirm_invoice');?> 
+				<input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>" value="<?= $this->security->get_csrf_hash() ?>" />
+				<input type="hidden" name="invoice_code" value="<?= $target->invoice_code ?>" />
+				<h5 class="text-center">Silahkan isi form dibawah ini untuk mengkonfirmasi pembayaran anda</h5><hr>
+				<div class="form-row">
+					<div class="form-group col-md-12">
+						<div class="input-group">
+							<div class="row col-md-12">
+								<label>Nomor Tagihan *</label>
+							</div>
+							<input type="number" class="form-control" value="<?= $target->invoice_code?>" disabled readonly>
+										
+							<div class="input-group-append">
+								<a class="btn btn-blue" href="#"><i class="fa fa-fw fa-shopping-cart text-white"></i></a>
+							</div>
+						</div>
+					</div>
+					<div class="form-group col-md-12">
+						<div class="row col-md-12">
+							<label>No Rekening / AN Pengirim *</label>
+						</div>
+						<input class="form-control" type="text" name="transfer_from" placeholder="Contoh: 2600070293 AN JOHN DOE">
+					</div>
+					<div class="form-group col-md-12">
+						<div class="row col-md-12">
+							<label>Tanggal Transfer *</label>
+						</div>
+						<input class="form-control" id="datepicker" name="transfer_date" placeholder="Contoh: 10/29/2021">
+					</div>
+					<div class="form-group col-md-12">
+						<div class="row col-md-12">
+							<label>Jumlah Transfer *</label>
+						</div>
+						<input class="form-control" type="number" name="transfer_amount" placeholder="Contoh: 10000">
+					</div>
+					<div class="form-group col-md-12">
+						<div class="row col-md-12">
+							<label>Bukti Transfer *</label>
+						</div>
+						<div class="custom-file">
+							<input type="file" class="custom-file-input" id="customFile" name="transfer_proof">
+							<label class="custom-file-label" for="customFile">Unggah Bukti Transfer</label>
+						</div>
+					</div>
+					<div class="form-group col-md-12">
+						<button type="submit" class="btn btn-success btn-lg btn-block"><i class="fa fa-paper-plane mr-1"></i> Konfirmasi Pembayaran</button>
+					</div>
+				</div>
+            </div>
+			</form>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+<script src="https://unpkg.com/gijgo@1.9.13/js/gijgo.min.js" type="text/javascript"></script>
+<link href="https://unpkg.com/gijgo@1.9.13/css/gijgo.min.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript">
+	$('#datepicker').datepicker({
+		dateFormat: 'dd-mm-yy',
+        uiLibrary: 'bootstrap4'
+    }).val();
+	$(".custom-file-input").on("change", function() {
+		var fileName = $(this).val().split("\\").pop();
+		$(this).siblings(".custom-file-label").addClass("selected").html(fileName);
+	});
+	function salin (teks) {
+		navigator.clipboard.writeText(teks).then(function() {
+		Swal.fire(
+			'Berhasil!',
+			'URL Berhasil Disalin',
+			'success'
+		)
+		}, function() {
+		alert('copy gagal')
+		});
+	}
+	
+  function confirm_hapus(id) {
+	Swal.fire({
+		title: 'Yakin ingin membatalkan tagihan #' + id + '?',
+		type: 'question',
+		showCloseButton: true,
+		confirmButtonText: 'Yakin',
+		confirmButtonColor: '<?= website_config('color_theme') ?>',
+		showCancelButton: true,
+		cancelButtonText: 'Batal',
+		cancelButtonColor: '#e74a3b',
+		reverseButtons: true
+	}).then((result) => {
+		if (result.value) window.location = "<?= base_url() ?>order/cancel/" + id
+	})
+}
+</script>
